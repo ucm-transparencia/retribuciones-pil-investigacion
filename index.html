@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retribuciones Personal Investigador Laboral — Portal de Transparencia UCM</title>
+<meta name="description" content="Retribuciones del Personal Investigador Laboral (PLI) de la Universidad Complutense de Madrid. Portal de Transparencia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --rojo: #b71234;
+  --rojo-dk: #8b0d27;
+  --rojo-lt: #f5e6ea;
+  --rojo-pale: #fef7f8;
+  --negro: #1a1a1a;
+  --gris: #4b5563;
+  --gris-m: #6b7280;
+  --gris-c: #f3f4f6;
+  --borde: #e5e7eb;
+  --blanco: #ffffff;
+  --fn: 'DM Sans', system-ui, sans-serif;
+  --fs: 'Source Serif 4', Georgia, serif;
+  --radius: 10px;
+  --tr: .18s ease;
+}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box }
+html { scroll-behavior:smooth; font-size:16px }
+body {
+  font-family: var(--fn);
+  background: #eef0f4;
+  color: var(--negro);
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+  line-height: 1.6;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+
+/* ── HEADER ── */
+.hdr {
+  background: linear-gradient(135deg, var(--rojo) 0%, var(--rojo-dk) 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px 32px 22px;
+  display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.hdr-escudo {
+  width: 52px; height: 52px;
+  background: rgba(255,255,255,.15); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,.25);
+}
+.hdr-text h1 { font-family: var(--fs); font-size: 22px; font-weight: 600; color: #fff; line-height: 1.2; }
+.hdr-text p { font-size: 12.5px; color: rgba(255,255,255,.75); margin-top: 4px; font-weight: 400; }
+.hdr-text p a { color: rgba(255,255,255,.9); text-decoration: underline; text-underline-offset: 2px; }
+.hdr-text p a:hover { color: #fff; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background: var(--blanco);
+  border: 1px solid var(--borde); border-top: none;
+  padding: 14px 32px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.ctrl-group { display:flex; flex-direction:column; gap:3px; }
+.ctrl-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--gris-m); }
+.year-btns { display: flex; gap: 4px; }
+.ybtn {
+  padding: 7px 16px; border: 2px solid var(--borde); border-radius: 7px;
+  background: var(--blanco); color: var(--gris);
+  font-family: var(--fn); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); white-space: nowrap;
+}
+.ybtn:hover { border-color: var(--rojo); color: var(--rojo); }
+.ybtn.act {
+  background: var(--rojo); border-color: var(--rojo); color: #fff;
+  box-shadow: 0 2px 8px rgba(183,18,52,.3);
+}
+.jornada-btns { display: flex; gap: 4px; }
+.jbtn {
+  padding: 7px 14px; border: 2px solid var(--borde); border-radius: 7px;
+  background: var(--blanco); color: var(--gris);
+  font-family: var(--fn); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); white-space: nowrap;
+}
+.jbtn:hover { border-color: var(--rojo); color: var(--rojo); }
+.jbtn.act { background: var(--rojo-lt); border-color: var(--rojo); color: var(--rojo-dk); }
+.export-group { display:flex; gap:8px; margin-left:auto; }
+.ebtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: none; border-radius: 7px;
+  font-family: var(--fn); font-size: 12px; font-weight: 700;
+  cursor: pointer; color: #fff; letter-spacing: .02em;
+  transition: all var(--tr); white-space: nowrap;
+}
+.ebtn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+.ebtn.xlsx { background: #1d6f42; }
+.ebtn.csv  { background: #155d36; }
+.ebtn svg  { width:14px; height:14px; flex-shrink:0; }
+
+/* ── MAIN ── */
+.main {
+  background: var(--blanco);
+  border: 1px solid var(--borde); border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 28px 32px 40px;
+}
+
+/* ── KPI ── */
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 30px; }
+.kpi {
+  background: var(--rojo-pale);
+  border: 1px solid var(--rojo-lt); border-top: 3px solid var(--rojo);
+  border-radius: var(--radius); padding: 16px 18px 14px;
+  transition: box-shadow var(--tr), transform var(--tr);
+}
+.kpi:hover { box-shadow: 0 4px 16px rgba(183,18,52,.1); transform: translateY(-2px); }
+.kpi-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--gris-m); margin-bottom: 6px; }
+.kpi-val { font-family: var(--fs); font-size: 22px; color: var(--rojo); line-height: 1.1; margin-bottom: 3px; }
+.kpi-sub { font-size: 11px; color: var(--gris-m); }
+
+/* ── SECTION ── */
+.sec-hdr {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--rojo-lt); flex-wrap: wrap;
+}
+.sec-hdr h2 { font-family: var(--fs); font-size: 18px; font-weight: 400; color: var(--rojo-dk); }
+.sec-tag { font-size: 11px; color: var(--gris-m); font-style: italic; }
+.section-block { margin-bottom: 36px; }
+
+/* ── NOTE ── */
+.nota {
+  background: #fff8e1; border: 1px solid #ffe082;
+  border-left: 4px solid #f59e0b; border-radius: 7px;
+  padding: 9px 14px; font-size: 12.5px; color: #78350f;
+  margin-bottom: 24px; line-height: 1.5;
+}
+
+/* ── TABLE ── */
+.tw {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border-radius: 8px; border: 1px solid var(--borde);
+  box-shadow: 0 1px 4px rgba(0,0,0,.04); margin-bottom: 8px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: linear-gradient(135deg, var(--rojo) 0%, var(--rojo-dk) 100%); }
+thead th {
+  padding: 11px 14px; text-align: left;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: #fff; white-space: nowrap; vertical-align: bottom;
+}
+thead th.num { text-align: right; }
+.subhdr td {
+  background: #f9eaed;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--rojo-dk); padding: 6px 14px;
+  border-bottom: 1px solid var(--rojo-lt);
+}
+tbody tr { border-bottom: 1px solid var(--borde); transition: background var(--tr); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--rojo-pale); }
+tbody tr:nth-child(even):not(.subhdr) { background: #fafafa; }
+tbody tr:nth-child(even):not(.subhdr):hover { background: var(--rojo-pale); }
+td { padding: 10px 14px; vertical-align: top; }
+td.cat { font-weight: 600; color: var(--negro); white-space: nowrap; }
+td.tit { color: var(--gris); font-size: 12px; }
+td.req { color: var(--gris); font-size: 11.5px; font-style: italic; }
+td.num { text-align: right; white-space: nowrap; vertical-align: middle; }
+td.dash { text-align: center; color: var(--gris-m); vertical-align: middle; }
+.ba { display: inline-block; background: #dbeafe; color: #1e40af; border-radius: 5px; padding: 2px 9px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.bm { display: inline-block; background: #dcfce7; color: #166534; border-radius: 5px; padding: 2px 9px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.be { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 5px; padding: 2px 9px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.bp { display: inline-block; background: #ede9fe; color: #5b21b6; border-radius: 5px; padding: 2px 9px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: var(--gris-c); border: 1px solid var(--borde);
+  border-radius: 8px; padding: 12px 16px; font-size: 12px;
+  color: var(--gris); line-height: 1.6; margin-top: 10px;
+}
+
+/* ── TRIENIO BOX ── */
+.trienio-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 8px;
+}
+.trienio-card {
+  background: var(--rojo-pale); border: 1px solid var(--rojo-lt);
+  border-radius: 8px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.trienio-card .t-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gris-m); }
+.trienio-card .t-val { font-family: var(--fs); font-size: 20px; color: var(--rojo); }
+.trienio-card .t-sub { font-size: 11px; color: var(--gris-m); }
+
+/* ── FUENTE ── */
+.fuente {
+  margin-top: 28px; font-size: 12px; color: var(--gris-m);
+  line-height: 1.6; border-top: 1px solid var(--borde); padding-top: 16px;
+}
+.fuente a { color: var(--rojo-dk); text-decoration: none; font-weight: 600; }
+.fuente a:hover { text-decoration: underline; }
+
+/* ── FOOTER ── */
+.footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--gris-m); }
+.footer a { color: var(--rojo-dk); text-decoration: none; font-weight: 600; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  body { padding: 12px 8px 40px; }
+  .hdr { padding: 18px 20px; }
+  .hdr-text h1 { font-size: 17px; }
+  .toolbar { padding: 12px 20px; gap: 10px; }
+  .main { padding: 20px 20px 32px; }
+  .kpi-row, .trienio-grid { grid-template-columns: 1fr 1fr; }
+  .export-group { margin-left: 0; }
+}
+@media (max-width: 500px) {
+  .hdr-escudo { display: none; }
+  .kpi-row, .trienio-grid { grid-template-columns: 1fr; }
+  .year-btns, .jornada-btns { flex-wrap: wrap; }
+  .ybtn, .jbtn { font-size: 12px; padding: 6px 12px; }
+  .ebtn { font-size: 11px; padding: 7px 12px; }
+}
+:focus-visible { outline: 3px solid var(--rojo); outline-offset: 2px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <div class="hdr-escudo" aria-hidden="true">🔬</div>
+    <div class="hdr-text">
+      <h1>Retribuciones Personal Investigador Laboral</h1>
+      <p>
+        Personal Laboral de Investigación (PLI) ·
+        <a href="https://www.ucm.es/portaldetransparencia" target="_blank" rel="noopener">Portal de Transparencia UCM</a>
+      </p>
+    </div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Filtros y exportación">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Año</span>
+      <div class="year-btns" id="year-btns" role="group">
+        <button class="ybtn" data-year="2024" onclick="setYear(2024)">2024</button>
+        <button class="ybtn act" data-year="2025" onclick="setYear(2025)">2025</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Jornada</span>
+      <div class="jornada-btns" id="jornada-btns">
+        <button class="jbtn act" data-j="completa" onclick="setJornada('completa')">Jornada completa</button>
+        <button class="jbtn" data-j="p25" onclick="setJornada('p25')">T.P. 25 horas</button>
+        <button class="jbtn" data-j="p1845" onclick="setJornada('p1845')">T.P. 18,45 horas</button>
+      </div>
+    </div>
+    <div class="export-group">
+      <button class="ebtn xlsx" onclick="exportXLSX()" aria-label="Descargar Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Excel (.xlsx)
+      </button>
+      <button class="ebtn csv" onclick="exportCSV()" aria-label="Descargar CSV">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        CSV
+      </button>
+    </div>
+  </div>
+
+  <main class="main" id="main-content"></main>
+
+  <footer class="footer">
+    <p>© Universidad Complutense de Madrid · <a href="https://www.ucm.es/portaldetransparencia" target="_blank" rel="noopener">Portal de Transparencia</a></p>
+  </footer>
+
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════
+   DATOS
+   categorias: [ { cat, titulacion, requisitos, salario14, productividad12 } ]
+   productividad12: null si no aplica, número si aplica
+   trienio: { mensual, anual }
+══════════════════════════════════════════════════════ */
+const DATOS = {
+
+  2024: {
+    subida: '0,5%',
+    fuente_fecha: 'Febrero 2025',
+    jornadas: {
+      completa: {
+        label: 'Jornada completa',
+        horas: null,
+        trienio: { mensual: 30.70, anual: 429.80 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 1323.07, prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 1529.42, prod12: null    },
+          { cat: 'Tit. Universitario grado medio',  titulacion: 'Diplomatura, Ingeniería Técnica, Arquitectura Técnica o Grado de menos de 240 ECTS',                                requisitos: null,                                                                                                                          salario14: 1529.42, prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 1934.84, prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS (nivel MECES 3)',                                 requisitos: null,                                                                                                                          salario14: 2330.52, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Máster, o al menos 3 años de experiencia investigadora.',                                                                      salario14: 2330.52, prod12: null    },
+          { cat: 'Contratado tipo 4',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 2 años de experiencia en gestión de proyectos.',                                                                     salario14: 2330.52, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 2330.52, prod12: 209.28  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 2330.52, prod12: 487.34  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 2330.52, prod12: 1286.95 },
+        ],
+      },
+      p25: {
+        label: 'Jornada parcial — 25 horas',
+        horas: 25,
+        trienio: { mensual: 20.47, anual: 286.58 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 882.05,  prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 1019.61, prod12: null    },
+          { cat: 'Tit. Universitario grado medio',  titulacion: 'Diplomatura, Ingeniería Técnica, Arquitectura Técnica o Grado de menos de 240 ECTS',                                requisitos: null,                                                                                                                          salario14: 1019.61, prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 1289.96, prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS (nivel MECES 3)',                                 requisitos: null,                                                                                                                          salario14: 1553.77, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Máster, o al menos 3 años de experiencia investigadora.',                                                                      salario14: 1553.77, prod12: null    },
+          { cat: 'Contratado tipo 4',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 2 años de experiencia en gestión de proyectos.',                                                                     salario14: 1553.77, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 1553.77, prod12: 209.28  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 1553.77, prod12: 487.34  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 1553.77, prod12: 1286.95 },
+        ],
+      },
+      p1845: {
+        label: 'Jornada parcial — 18,45 horas',
+        horas: 18.45,
+        trienio: { mensual: 15.03, anual: 210.42 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 650.95,  prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 752.43,  prod12: null    },
+          { cat: 'Tit. Universitario grado medio',  titulacion: 'Diplomatura, Ingeniería Técnica, Arquitectura Técnica o Grado de menos de 240 ECTS',                                requisitos: null,                                                                                                                          salario14: 752.43,  prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 951.95,  prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS (nivel MECES 3)',                                 requisitos: null,                                                                                                                          salario14: 1146.62, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Máster, o al menos 3 años de experiencia investigadora.',                                                                      salario14: 1146.62, prod12: null    },
+          { cat: 'Contratado tipo 4',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 2 años de experiencia en gestión de proyectos.',                                                                     salario14: 1146.62, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 1146.62, prod12: 102.97  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 1146.62, prod12: 239.78  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 1146.62, prod12: 633.18  },
+        ],
+      },
+    },
+  },
+
+  2025: {
+    subida: '2,5%',
+    fuente_fecha: 'Diciembre 2025',
+    nota2024: 'En 2025 se elimina la categoría "Titulado Universitario de grado medio" y "Contratado tipo 4" respecto a 2024.',
+    jornadas: {
+      completa: {
+        label: 'Jornada completa',
+        horas: null,
+        trienio: { mensual: 31.47, anual: 440.58 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 1356.01, prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 1567.50, prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 1983.02, prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS o Grado de 240 + Máster (nivel MECES 3)',        requisitos: null,                                                                                                                          salario14: 2388.56, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 3 años de experiencia investigadora o 2 años de experiencia en gestión de proyectos.',                             salario14: 2388.56, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 2388.56, prod12: 208.24  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 2388.56, prod12: 484.92  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 2388.56, prod12: 1280.55 },
+        ],
+      },
+      p25: {
+        label: 'Jornada parcial — 25 horas',
+        horas: 25,
+        trienio: { mensual: 20.98, anual: 293.72 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 904.01,  prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 1045.00, prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 1322.08, prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS o Grado de 240 + Máster (nivel MECES 3)',        requisitos: null,                                                                                                                          salario14: 1592.46, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 3 años de experiencia investigadora o 2 años de experiencia en gestión de proyectos.',                             salario14: 1592.46, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 1592.46, prod12: 138.83  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 1592.46, prod12: 323.28  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 1592.46, prod12: 853.70  },
+        ],
+      },
+      p1845: {
+        label: 'Jornada parcial — 18,45 horas',
+        horas: 18.45,
+        trienio: { mensual: 15.41, anual: 215.74 },
+        categorias: [
+          { cat: 'Técnico de FP tipo 1',            titulacion: 'Formación Profesional de grado medio',                                                                              requisitos: null,                                                                                                                          salario14: 667.16,  prod12: null    },
+          { cat: 'Técnico de FP tipo 2',            titulacion: 'Formación Profesional',                                                                                             requisitos: 'Formación Profesional de grado superior o Formación Profesional de grado medio con tres años de experiencia profesional.',  salario14: 771.17,  prod12: null    },
+          { cat: 'Contratado tipo 1',               titulacion: 'Grado de al menos 240 y menos de 300 ECTS',                                                                         requisitos: null,                                                                                                                          salario14: 975.65,  prod12: null    },
+          { cat: 'Contratado tipo 2',               titulacion: 'Licenciatura, Ingeniería, Arquitectura, Grado de al menos 300 ECTS o Grado de 240 + Máster (nivel MECES 3)',        requisitos: null,                                                                                                                          salario14: 1175.17, prod12: null    },
+          { cat: 'Contratado tipo 3',               titulacion: 'Grado de 240 ECTS',                                                                                                 requisitos: 'Al menos 3 años de experiencia investigadora o 2 años de experiencia en gestión de proyectos.',                             salario14: 1175.17, prod12: null    },
+          { cat: 'Contratado posdoctoral tipo 1',   titulacion: 'Doctorado',                                                                                                         requisitos: null,                                                                                                                          salario14: 1175.17, prod12: 102.46  },
+          { cat: 'Contratado posdoctoral tipo 2',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 3 años de experiencia posdoctoral.',                                                                                    salario14: 1175.17, prod12: 238.58  },
+          { cat: 'Contratado posdoctoral tipo 3',   titulacion: 'Doctorado',                                                                                                         requisitos: 'Más de 7 años de experiencia posdoctoral, o haber sido beneficiario de un contrato laboral financiado a través de un programa competitivo (p.e. Marie Curie o RyC).', salario14: 1175.17, prod12: 630.03  },
+        ],
+      },
+    },
+  },
+
+};
+
+/* ══════════════════════════
+   ESTADO
+══════════════════════════ */
+let currentYear    = 2025;
+let currentJornada = 'completa';
+
+/* ══════════════════════════
+   UTILS
+══════════════════════════ */
+const fmt = n => n == null ? '—' : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+
+/* ══════════════════════════
+   RENDER
+══════════════════════════ */
+function render() {
+  const d  = DATOS[currentYear];
+  const jd = d.jornadas[currentJornada];
+  const cats = jd.categorias;
+
+  // KPIs
+  const maxSal = Math.max(...cats.map(c => c.salario14));
+  const maxProd = Math.max(...cats.filter(c => c.prod12).map(c => c.prod12));
+  const maxTotal = Math.max(...cats.map(c => c.salario14 + (c.prod12 || 0)));
+
+  // Table rows
+  const rows = cats.map(c => {
+    const totalMensual = (c.salario14 * 14 + (c.prod12 || 0) * 12) / 12;
+    const totalAnual   = c.salario14 * 14 + (c.prod12 || 0) * 12;
+    return `<tr>
+      <td class="cat">${c.cat}</td>
+      <td class="tit">${c.titulacion}</td>
+      <td class="req">${c.requisitos || '—'}</td>
+      <td class="num"><span class="bm">${fmt(c.salario14)}</span></td>
+      <td class="num">${c.prod12 != null ? `<span class="bp">${fmt(c.prod12)}</span>` : '<span style="color:var(--gris-m);font-size:12px">—</span>'}</td>
+      <td class="num"><span class="ba">${fmt(totalAnual)}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Nota 2025
+  const nota2025 = currentYear === 2025
+    ? `<div class="nota">ℹ️ En 2025 se unifica la categoría <strong>Contratado tipo 3</strong> (absorbe gestión de proyectos) y desaparecen <em>Titulado Universitario de grado medio</em> y <em>Contratado tipo 4</em> respecto a 2024.</div>`
+    : '';
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-lbl">Año / Subida</div>
+        <div class="kpi-val">${currentYear}</div>
+        <div class="kpi-sub">Incremento salarial: ${d.subida}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Salario bruto máximo</div>
+        <div class="kpi-val">${fmt(maxSal)}</div>
+        <div class="kpi-sub">${jd.label} · 14 pagas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Máx. con productividad</div>
+        <div class="kpi-val">${fmt(maxTotal * 14 / 12 + maxTotal * 2 / 12)}</div>
+        <div class="kpi-sub">Posdoctoral tipo 3 · total anual</div>
+      </div>
+    </div>
+
+    ${nota2025}
+
+    <!-- TABLA PRINCIPAL -->
+    <div class="section-block">
+      <div class="sec-hdr">
+        <h2>${jd.label} — ${currentYear} (subida ${d.subida})</h2>
+        <span class="sec-tag">Salario bruto mensual (14 pagas) + productividad mensual (12 pagas, solo posdoctorales)</span>
+      </div>
+      <div class="tw">
+        <table aria-label="Retribuciones PLI ${currentYear} — ${jd.label}">
+          <thead><tr>
+            <th scope="col" style="min-width:180px">Categoría</th>
+            <th scope="col" style="min-width:200px">Titulación requerida</th>
+            <th scope="col" style="min-width:180px">Requisitos específicos</th>
+            <th scope="col" class="num" style="min-width:145px">Salario bruto<br><small style="font-weight:400;text-transform:none">(mensual · 14 pagas)</small></th>
+            <th scope="col" class="num" style="min-width:135px">Productividad<br><small style="font-weight:400;text-transform:none">(mensual · 12 pagas)</small></th>
+            <th scope="col" class="num" style="min-width:145px">Total anual</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="info-box">
+        El <strong>total anual</strong> se calcula como: Salario bruto × 14 pagas + Productividad × 12 pagas. La productividad solo se percibe en las categorías posdoctorales y varía según la experiencia acreditada.
+      </div>
+    </div>
+
+    <!-- TRIENIO -->
+    <div class="section-block">
+      <div class="sec-hdr">
+        <h2>Trienio — ${jd.label}</h2>
+        <span class="sec-tag">Incremento por cada 3 años de antigüedad reconocida</span>
+      </div>
+      <div class="trienio-grid">
+        <div class="trienio-card">
+          <div class="t-lbl">Importe mensual</div>
+          <div class="t-val">${fmt(jd.trienio.mensual)}</div>
+          <div class="t-sub">Por trienio · ${jd.label.toLowerCase()}</div>
+        </div>
+        <div class="trienio-card">
+          <div class="t-lbl">Importe anual</div>
+          <div class="t-val">${fmt(jd.trienio.anual)}</div>
+          <div class="t-sub">Por trienio · ${jd.label.toLowerCase()}</div>
+        </div>
+        <div class="trienio-card">
+          <div class="t-lbl">Trienios para los tres tipos</div>
+          <div class="t-val" style="font-size:16px">Jornada completa · T.P. 25h · T.P. 18,45h</div>
+          <div class="t-sub">Cada jornada tiene su propio importe de trienio</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESUMEN TRIENIOS TODAS LAS JORNADAS -->
+    <div class="section-block">
+      <div class="sec-hdr">
+        <h2>Comparativa de trienios por jornada</h2>
+        <span class="sec-tag">Año ${currentYear}</span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th scope="col">Jornada</th>
+            <th scope="col" class="num" style="min-width:140px">Trienio mensual</th>
+            <th scope="col" class="num" style="min-width:140px">Trienio anual</th>
+          </tr></thead>
+          <tbody>
+            ${Object.entries(d.jornadas).map(([k, j]) => `<tr>
+              <td class="cat">${j.label}</td>
+              <td class="num"><span class="be">${fmt(j.trienio.mensual)}</span></td>
+              <td class="num"><span class="ba">${fmt(j.trienio.anual)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="fuente">
+      <strong>Fuente:</strong>
+      <a href="https://www.ucm.es/servicio-de-coordinacion,-nominas-y-seguros-sociales" target="_blank" rel="noopener">
+        Vicegerencia de Recursos Humanos – UCM
+      </a>
+      &nbsp;·&nbsp; Datos fuente: <strong>${d.fuente_fecha}</strong>
+    </div>
+  `;
+}
+
+/* ══════════════════════════
+   INTERACCIONES
+══════════════════════════ */
+function setYear(y) {
+  currentYear = y;
+  document.querySelectorAll('.ybtn').forEach(b => b.classList.toggle('act', +b.dataset.year === y));
+  render();
+}
+
+function setJornada(j) {
+  currentJornada = j;
+  document.querySelectorAll('.jbtn').forEach(b => b.classList.toggle('act', b.dataset.j === j));
+  render();
+}
+
+/* ══════════════════════════
+   EXPORTACIÓN (todas las jornadas)
+══════════════════════════ */
+function buildExportRows() {
+  const d = DATOS[currentYear];
+  const rows = [
+    [`Universidad Complutense de Madrid — Retribuciones Personal Investigador Laboral (PLI) ${currentYear}`],
+    [`Fuente: Vicegerencia de Recursos Humanos · Subida salarial: ${d.subida} · Datos fuente: ${d.fuente_fecha}`],
+    [`Nota: El salario bruto se percibe en 14 pagas; la productividad en 12 pagas (solo categorías posdoctorales).`],
+    [],
+  ];
+
+  Object.entries(d.jornadas).forEach(([key, jd]) => {
+    rows.push([jd.label.toUpperCase()]);
+    rows.push(['Categoría', 'Titulación requerida', 'Requisitos específicos', 'Salario bruto mensual (€) — 14 pagas', 'Productividad mensual (€) — 12 pagas', 'Total anual (€)']);
+    jd.categorias.forEach(c => {
+      const totalAnual = c.salario14 * 14 + (c.prod12 || 0) * 12;
+      rows.push([c.cat, c.titulacion, c.requisitos || '', c.salario14, c.prod12 != null ? c.prod12 : '', totalAnual]);
+    });
+    rows.push([`Trienio mensual (€): ${jd.trienio.mensual}`, `Trienio anual (€): ${jd.trienio.anual}`]);
+    rows.push([]);
+  });
+
+  return rows;
+}
+
+function exportXLSX() {
+  const rows = buildExportRows();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:5}},
+    {s:{r:1,c:0},e:{r:1,c:5}},
+    {s:{r:2,c:0},e:{r:2,c:5}},
+  ];
+  ws['!cols'] = [{wch:30},{wch:50},{wch:55},{wch:28},{wch:28},{wch:18}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `PLI ${currentYear}`);
+  XLSX.writeFile(wb, `UCM_Retribuciones_PLI_${currentYear}.xlsx`);
+}
+
+function exportCSV() {
+  const rows = buildExportRows();
+  const csv = 'sep=;\r\n' + rows.map(r =>
+    r.map(c => {
+      const s = c == null ? '' : String(c);
+      return s.includes(';') || s.includes('"') ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(';')
+  ).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = `UCM_Retribuciones_PLI_${currentYear}.csv`;
+  a.click();
+}
+
+/* ══════════════════════════
+   INICIO
+══════════════════════════ */
+render();
+</script>
+</body>
+</html>
